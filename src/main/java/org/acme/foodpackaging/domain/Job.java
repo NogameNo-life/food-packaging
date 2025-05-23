@@ -20,6 +20,7 @@ public class Job {
     @PlanningId
     private String id;
     private String name;
+    private String np;
 
     private Product product;
     private int quantity;
@@ -86,10 +87,11 @@ public class Job {
         this.pinned = pinned;
     }
 
-    public Job(String id, String name, Product product, int quantity, Duration duration, LocalDateTime minStartTime, LocalDateTime idealEndTime, LocalDateTime maxEndTime, int priority, boolean pinned,
+    public Job(String id, String name, String np, Product product, int quantity, Duration duration, LocalDateTime minStartTime, LocalDateTime idealEndTime, LocalDateTime maxEndTime, int priority, boolean pinned,
                LocalDateTime startCleaningDateTime, LocalDateTime startProductionDateTime) {
         this.id = id;
         this.name = name;
+        this.np = np;
         this.product = product;
         this.quantity = quantity;
         this.duration = duration;
@@ -103,8 +105,8 @@ public class Job {
         this.pinned = pinned;
     }
 
-    public Job(String id, String name, Product product, int quantity, Duration duration, LocalDateTime minStartTime, LocalDateTime idealEndTime, LocalDateTime maxEndTime, int priority, boolean pinned) {
-        this(id, name, product, quantity, duration, minStartTime, idealEndTime, maxEndTime, priority, pinned, null, null);
+    public Job(String id, String name, String np, Product product, int quantity, Duration duration, LocalDateTime minStartTime, LocalDateTime idealEndTime, LocalDateTime maxEndTime, int priority, boolean pinned) {
+        this(id, name, np, product, quantity, duration, minStartTime, idealEndTime, maxEndTime, priority, pinned, null, null);
     }
 
     @Override
@@ -129,35 +131,8 @@ public class Job {
     public Product getProduct() {
         return product;
     }
-
-    public Duration getDuration() {
-        if (product == null || line == null) {
-            return duration; // либо заранее заданное значение
-        }
-
-        ProductType type = product.getType();
-        String lineId = line.getId();
-
-        return switch (type) {
-            case ROD -> Duration.ofMinutes((long) Math.ceil((double) quantity / 198));
-            case PLUSH -> Duration.ofMinutes((long) Math.ceil((double) quantity / 200));
-            case CACTUS -> {
-                if (lineId.equals("1")) yield Duration.ofMinutes((long) Math.ceil((double) quantity / 200));
-                else if (lineId.equals("2")) yield Duration.ofMinutes((long) Math.ceil((double) quantity / 196));
-                else if (lineId.equals("3")) yield Duration.ofMinutes((long) Math.ceil((double) quantity / 206));
-                else yield Duration.ZERO; // запрещенные линии — может использоваться доп. constraint
-            }
-            case CLASSIC -> {
-                Integer speed = CLASSIC_LINE_SPEEDS.get(lineId);
-                if (speed != null) {
-                    yield Duration.ofMinutes((long) Math.ceil((double) quantity / speed));
-                } else {
-                    yield Duration.ZERO;
-                }
-            }
-            default -> duration;
-        };
-    }
+    
+    public Duration getDuration() { return duration; }
 
     public LocalDateTime getMinStartTime() {
         return minStartTime;

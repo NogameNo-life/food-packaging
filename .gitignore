@@ -25,3 +25,5 @@ venv*
 #Directories
 /.idea/
 target/
+src/main/resources/exportFiles/
+src/main/resources/importFiles/

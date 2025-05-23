@@ -12,6 +12,7 @@ public class ImportOrderData {
 
     private static final int LINE_COUNT = 6;
     private static final int DEFAULT_PRIORITY = 0;
+    private LocalDateTime DATE;
 
     final int ALLERGEN_DIFFERENT_GLAZE = 90;
     final int CLEANING_AFTER_ALLERGEN = 240;
@@ -29,16 +30,18 @@ public class ImportOrderData {
             "4810268056826", true
     );
 
+    public LocalDateTime getDATE() { return DATE; }
     public PackagingSchedule scheduleInitializer(String date){
 
         final LocalDate START_DATE = LocalDate.parse(date);
         final LocalDateTime START_DATE_TIME = LocalDateTime.of(START_DATE, LocalTime.MIDNIGHT);
-        final LocalDate END_DATE = START_DATE.plusDays(1);
+        final LocalDate END_DATE = START_DATE.plusDays(2);
         final LocalDateTime END_DATE_TIME = LocalDateTime.of(END_DATE, LocalTime.MIDNIGHT);
 
         PackagingSchedule solution = new PackagingSchedule();
 
         solution.setWorkCalendar(new WorkCalendar(START_DATE, END_DATE));
+        DATE = START_DATE_TIME;
 
         // Инициализация линий
         List<Line> lines = createLines(LINE_COUNT, START_DATE_TIME);
@@ -88,8 +91,8 @@ public class ImportOrderData {
                         String snm = resultSet.getString("SNM");
                         String name = resultSet.getString("NAME");
 
-                        int defaultDuration = 0; // Это может быть 0!
                         if (quantity == 0) continue;
+                        int defaultDuration =quantity/200;
 
                         Product product = productMap.get(ean13);
                         if (product == null) {
@@ -101,6 +104,7 @@ public class ImportOrderData {
                         // Создание задания
                         Job job = createJob(
                                 String.valueOf(++id),
+                                np,
                                 product,
                                 quantity,
                                 defaultDuration,
@@ -207,8 +211,9 @@ public class ImportOrderData {
 
         List<Line> lines = new ArrayList<>(lineCount);
         for(int i=1; i<=lineCount; ++i){
-            String name = "Line" + String.valueOf(i);
-            Line line = new Line(String.valueOf(i), name, "Miku",startDateTime);
+            String lineName = "Line" + String.valueOf(i);
+            String operatorName = "Operator" + String.valueOf(i);
+            Line line = new Line(String.valueOf(i), lineName, operatorName,startDateTime);
             lines.add(line);
         }
         return lines;
@@ -230,7 +235,7 @@ public class ImportOrderData {
         return true;
     }
 
-    private Job createJob(String id, Product product, int quantity, int duration, int priority, LocalDateTime startDate) {
+    private Job createJob(String id, String np, Product product, int quantity, int duration, int priority, LocalDateTime startDate) {
         Pattern pattern = Pattern.compile("\"([^\"]+)\"");
         String jobName = product.getName();
         Matcher matcher = pattern.matcher(jobName);
@@ -244,8 +249,8 @@ public class ImportOrderData {
                 quantity,
                 Duration.ofMinutes(duration),
                 startDate,
-                startDate.plusHours(3), // Идеальное время завершения
-                startDate.plusHours(6), // Максимальное время завершения
+                startDate.plusHours(23).plusMinutes(59).plusSeconds(59), // Идеальное время завершения
+                startDate.plusDays(1).plusHours(23).plusMinutes(59).plusSeconds(59), // Максимальное время завершения
                 priority,
                 false
         );
